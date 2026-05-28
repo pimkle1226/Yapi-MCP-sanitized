@@ -1,5 +1,5 @@
 {
-  "name": "yapi-auto-mcp",
+  "name": "yapi-mcp-sanitized",
   "version": "0.1.3",
   "description": "YApi Auto MCP Server - Model Context Protocol server for YApi integration, enables AI tools like Cursor to interact with YApi API documentation",
   "main": "dist/index.js",
@@ -48,7 +48,7 @@
     "api-design",
     "documentation-tool"
   ],
-  "author": "liangzhensheng <372959130@qq.com>",
+  "author": "Jane Sheng<yeonkitt@gmail.com>",
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.6.0",
