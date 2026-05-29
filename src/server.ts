@@ -23,9 +23,9 @@ export class YapiMcpServer {
     this.projectInfoCache = new ProjectInfoCache(yapiCacheTTL);
     // 判断是否为stdio模式
     this.isStdioMode = process.env.NODE_ENV === "cli" || process.argv.includes("--stdio");
-    
+
     this.logger.info(`YapiMcpServer初始化，日志级别: ${yapiLogLevel}, 缓存TTL: ${yapiCacheTTL}分钟`);
-    
+
     this.server = new McpServer({
       name: "Yapi MCP Server",
       version: "0.2.1",
@@ -116,14 +116,14 @@ export class YapiMcpServer {
           const apiInterface = await this.yapiService.getApiInterface(projectId, apiId);
           this.logger.info(`成功获取API接口: ${apiInterface.title || apiId}`);
 
-          // 格式化返回数据，使其更易于阅读
+          // 数据已在 service 层清洗，直接格式化输出
           const formattedResponse = {
             基本信息: {
               接口ID: apiInterface._id,
               接口名称: apiInterface.title,
               接口路径: apiInterface.path,
               请求方式: apiInterface.method,
-              接口描述: apiInterface.desc
+              接口描述: apiInterface.desc,
             },
             请求参数: {
               URL参数: apiInterface.req_params,
@@ -131,15 +131,15 @@ export class YapiMcpServer {
               请求头: apiInterface.req_headers,
               请求体类型: apiInterface.req_body_type,
               表单参数: apiInterface.req_body_form,
-              Json参数: apiInterface.req_body_other
+              Json参数: apiInterface.req_body_other,
             },
             响应信息: {
               响应类型: apiInterface.res_body_type,
-              响应内容: apiInterface.res_body
+              响应内容: apiInterface.res_body,
             },
             其他信息: {
-              接口文档: apiInterface.markdown
-            }
+              接口文档: apiInterface.markdown,
+            },
           };
 
           return {
@@ -304,9 +304,9 @@ export class YapiMcpServer {
           // 返回保存结果
           const resultApiId = response.data._id;
           return {
-            content: [{ 
-              type: "text", 
-              text: `接口${id ? '更新' : '新增'}成功！\n接口ID: ${resultApiId}\n接口名称: ${title}\n请求方法: ${method}\n接口路径: ${path}` 
+            content: [{
+              type: "text",
+              text: `接口${id ? '更新' : '新增'}成功！\n接口ID: ${resultApiId}\n接口名称: ${title}\n请求方法: ${method}\n接口路径: ${path}`
             }],
           };
         } catch (error) {
@@ -351,12 +351,11 @@ export class YapiMcpServer {
               path: string,
               method: string,
               catName: string,
-              createTime: string,
-              updateTime: string
+              updateTime?: string
             }>
           }> = {};
 
-          // 格式化搜索结果
+          // 格式化搜索结果（时间已在 sanitizer 中转为 ISO 格式）
           searchResults.list.forEach(api => {
             const projectId = String(api.project_id);
             const projectName = api.project_name || `未知项目(${projectId})`;
@@ -374,8 +373,7 @@ export class YapiMcpServer {
               path: api.path,
               method: api.method,
               catName: api.cat_name || '未知分类',
-              createTime: new Date(api.add_time).toLocaleString(),
-              updateTime: new Date(api.up_time).toLocaleString()
+              updateTime: api.up_time,
             });
           });
 
@@ -399,7 +397,8 @@ export class YapiMcpServer {
                 responseContent += `### ${api.title} (${api.method} ${api.path})\n\n`;
                 responseContent += `- 接口ID: ${api.id}\n`;
                 responseContent += `- 所属分类: ${api.catName}\n`;
-                responseContent += `- 更新时间: ${api.updateTime}\n\n`;
+                if (api.updateTime) responseContent += `- 更新时间: ${api.updateTime}\n`;
+                responseContent += "\n";
               });
             } else {
               // 大量接口，展示简洁表格
@@ -453,13 +452,13 @@ export class YapiMcpServer {
             };
           }
 
-          // 构建项目信息列表
+          // 构建项目信息列表（数据已清洗）
           const projectsList = Array.from(projectInfoCache.entries()).map(([id, info]) => ({
             项目ID: id,
             项目名称: info.name,
-            项目描述: info.desc || '无描述',
-            基础路径: info.basepath || '/',
-            项目分组ID: info.group_id
+            ...(info.desc && { 项目描述: info.desc }),
+            ...(info.basepath && { 基础路径: info.basepath }),
+            ...(info.group_id && { 项目分组ID: info.group_id }),
           }));
 
           return {
@@ -503,39 +502,34 @@ export class YapiMcpServer {
             };
           }
 
-          // 构建包含接口列表的分类信息
+          // 构建包含接口列表的分类信息（时间已在 sanitizer 中转为 ISO 格式）
           const categoriesWithApisPromises = categoryList.map(async (cat) => {
-            // 获取分类下的接口列表
             try {
               const apis = await this.yapiService.getCategoryApis(projectId, cat._id);
 
-              // 将接口信息简化为所需字段
-              const simplifiedApis = apis?.map(api => ({
+              const simplifiedApis = apis.map(api => ({
                 接口ID: api._id,
                 接口名称: api.title,
                 接口路径: api.path,
-                请求方法: api.method
-              })) || [];
+                请求方法: api.method,
+              }));
 
               return {
                 分类ID: cat._id,
                 分类名称: cat.name,
-                分类描述: cat.desc || '无描述',
-                创建时间: new Date(cat.add_time).toLocaleString(),
-                更新时间: new Date(cat.up_time).toLocaleString(),
-                接口列表: simplifiedApis
+                ...(cat.desc && { 分类描述: cat.desc }),
+                ...(cat.add_time && { 创建时间: cat.add_time }),
+                ...(cat.up_time && { 更新时间: cat.up_time }),
+                接口列表: simplifiedApis,
               };
             } catch (error) {
               this.logger.error(`获取分类 ${cat._id} 下的接口列表失败:`, error);
-              // 发生错误时仍然返回分类信息，但不包含接口列表
               return {
                 分类ID: cat._id,
                 分类名称: cat.name,
-                分类描述: cat.desc || '无描述',
-                创建时间: new Date(cat.add_time).toLocaleString(),
-                更新时间: new Date(cat.up_time).toLocaleString(),
+                ...(cat.desc && { 分类描述: cat.desc }),
                 接口列表: [],
-                错误: `获取接口列表失败: ${error}`
+                错误: `获取接口列表失败: ${error}`,
               };
             }
           });

@@ -84,7 +84,58 @@ export interface ApiSearchResultItem {
   // 其他字段...
 }
 
-// API接口返回类型
+// ─── 清洗后的类型（移除了 nullish 字段，时间统一为 ISO 字符串）───
+
+export interface SanitizedProjectInfo {
+  _id: number | string;
+  name: string;
+  desc?: string;
+  group_id?: number;
+  basepath?: string;
+}
+
+export interface SanitizedCategoryInfo {
+  _id: string;
+  name: string;
+  desc?: string;
+  project_id?: number | string;
+  add_time?: string; // ISO string
+  up_time?: string;  // ISO string
+  index?: number;
+}
+
+export interface SanitizedSearchResultItem {
+  _id: string;
+  title: string;
+  path: string;
+  method: string;
+  project_id?: number | string;
+  catid?: string;
+  add_time?: string; // ISO string
+  up_time?: string;  // ISO string
+  project_name?: string;
+  cat_name?: string;
+}
+
+export interface SanitizedApiInterface {
+  _id: string;
+  title: string;
+  path: string;
+  method: string;
+  desc?: string;
+  markdown?: string;
+  req_params?: any[];
+  req_query?: any[];
+  req_headers?: any[];
+  req_body_type?: string;
+  req_body_form?: any[];
+  req_body_other?: string; // simplified JSON Schema
+  res_body_type?: string;
+  res_body?: string; // simplified JSON Schema
+}
+
+// ─── API 接口返回类型 ───
+
 export interface ApiResponse<T> {
   errcode: number;
   errmsg: string;

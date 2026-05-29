@@ -1,3 +1,9 @@
+This project is forked from https://github.com/lzsheng/Yapi-MCP.git
+
+Why this fork
+原项目非常棒，但在 MCP 实际使用场景中，YApi 原始返回的富文本和空字段会消耗大量 LLM Context Token。本 Fork 版本主要引入了深度的数据清洗管道（Data Sanitization），移除了无用 Schema 和 HTML 标签，使 Token 消耗降低，极大提升了 AI 调用的专注度。
+
+
 # Yapi Auto MCP Server
 
 一个用于 YApi 的 Model Context Protocol (MCP) 服务器，让你能够在 Cursor 等 AI 编程工具中直接操作 YApi 接口文档。
@@ -47,11 +53,11 @@ Yapi Auto MCP Server 是一个基于 [Model Context Protocol](https://modelconte
 ```json
 {
   "mcpServers": {
-    "yapi-auto-mcp": {
+    "yapi-mcp-sanitized": {
       "command": "npx",
       "args": [
         "-y",
-        "yapi-auto-mcp",
+        "@pimkle/yapi-mcp-sanitized",
         "--stdio",
         "--yapi-base-url=https://your-yapi-domain.com",
         "--yapi-token=projectId:your_token_here"
