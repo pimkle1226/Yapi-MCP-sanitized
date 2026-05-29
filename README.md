@@ -53,11 +53,11 @@ Yapi Auto MCP Server 是一个基于 [Model Context Protocol](https://modelconte
 ```json
 {
   "mcpServers": {
-    "yapi-auto-mcp": {
+    "yapi-mcp-sanitized": {
       "command": "npx",
       "args": [
         "-y",
-        "yapi-auto-mcp",
+        "@pimkle/yapi-mcp-sanitized",
         "--stdio",
         "--yapi-base-url=https://your-yapi-domain.com",
         "--yapi-token=projectId:your_token_here"
